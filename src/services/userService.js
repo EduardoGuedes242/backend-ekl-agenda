@@ -1,14 +1,30 @@
 const db = require('../db');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 // Funções de serviço para usuários
 async function listarUsuarios() {
-    const { rows } = await db.query('SELECT * FROM "EKL$USER"');
+    const { rows } = await db.query('SELECT * FROM "ekl$user"');
     return rows;
 }
 
 async function criarUsuario(usuario) {
-    const { nome, email, senha } = usuario;
-    const { rows } = await db.query('INSERT INTO usuarios (nome, email, senha) VALUES ($1, $2, $3) RETURNING *', [nome, email, senha]);
+    const { tenant_id, name, email, password } = usuario;
+
+    const senhaCriptografada = await bcrypt.hash(password, 10);
+
+    const { rows } = await db.query(
+        `INSERT INTO ekl$user (
+            tnt_id,
+            usr_name,
+            usr_email,
+            usr_password
+        ) VALUES (
+            $1, $2, $3, $4
+        ) RETURNING *`,
+        [tenant_id, name, email, senhaCriptografada]
+    );
+
     return rows[0];
 }
 
@@ -28,10 +44,38 @@ async function deletarUsuario(id) {
     await db.query('DELETE FROM usuarios WHERE id = $1', [id]);
 }
 
+async function login(usuario) {
+    const { email, senha } = usuario;
+
+    const { rows } = await db.query('SELECT * FROM ekl$user WHERE USR_EMAIL = $1', [email]);
+
+    if (rows.length === 0) {
+        throw new Error('Usuário não encontrado');
+    }
+
+    const usuarioRetornado = rows[0];
+
+    // Verifica a senha usando bcrypt
+    const senhaCorreta = await bcrypt.compare(senha, usuarioRetornado.usr_password);
+    if (!senhaCorreta) {
+        throw new Error('Senha incorreta');
+    }
+
+    // Criação do token JWT
+    const token = jwt.sign({
+        id: usuarioRetornado.usr_id,
+        email: usuarioRetornado.usr_email,
+        tenant: usuarioRetornado.tnt_id
+    }, 'chave_secreta', { expiresIn: '1h' }); // Define a expiração do token para 1 hora
+
+    return token;
+}
+
 module.exports = {
     listarUsuarios,
     criarUsuario,
     obterUsuario,
     atualizarUsuario,
     deletarUsuario,
+    login,
 };

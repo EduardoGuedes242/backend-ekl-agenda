@@ -26,10 +26,21 @@ async function deletarUsuario(req, res) {
     res.status(204).end();
 }
 
+async function login(req, res) {
+   
+    try {
+        const token = await usuarioService.login(req.body);
+        res.json({ token });
+    } catch (error) {
+        res.status(401).json({ error: error.message });
+    }
+}
+
 module.exports = {
     listarUsuarios,
     criarUsuario,
     obterUsuario,
     atualizarUsuario,
     deletarUsuario,
+    login,
 };
