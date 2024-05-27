@@ -46,28 +46,19 @@ async function deletarUsuario(id) {
 
 async function login(usuario) {
     const { email, senha } = usuario;
-
     const { rows } = await db.query('SELECT * FROM ekl$user WHERE USR_EMAIL = $1', [email]);
-
     if (rows.length === 0) {
         throw new Error('Usuário não encontrado');
     }
-
     const usuarioRetornado = rows[0];
-
-    // Verifica a senha usando bcrypt
     const senhaCorreta = await bcrypt.compare(senha, usuarioRetornado.usr_password);
     if (!senhaCorreta) {
         throw new Error('Senha incorreta');
     }
-
-    // Criação do token JWT
     const token = jwt.sign({
-        id: usuarioRetornado.usr_id,
-        email: usuarioRetornado.usr_email,
-        tenant: usuarioRetornado.tnt_id
-    }, 'chave_secreta', { expiresIn: '1h' }); // Define a expiração do token para 1 hora
-
+        user_id: usuarioRetornado.usr_id,
+        tenant_id: usuarioRetornado.tnt_id
+    }, 'chave_secreta', { expiresIn: '1h' }); 
     return token;
 }
 

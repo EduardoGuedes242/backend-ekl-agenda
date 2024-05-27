@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const usuarioRoutes = require('./src/routes/userRoutes');
 const tenantRoutes = require('./src/routes/tenantRoutes');
 const companyRoutes = require('./src/routes/companyRoutes');
@@ -9,7 +10,7 @@ const app = express();
 const PORT = 3000;
 const VERSION_API  = 'v1';
 
-
+app.use(cors());
 app.use(express.json());
 
 app.use(`/${VERSION_API}/user`, usuarioRoutes);

@@ -27,7 +27,6 @@ async function deletarUsuario(req, res) {
 }
 
 async function login(req, res) {
-   
     try {
         const token = await usuarioService.login(req.body);
         res.json({ token });
