@@ -8,7 +8,7 @@ async function getAllCompany(req, res) {
 }
 
 async function createCompany(req, res) {
-    const tenant_id = req.user.tenant
+    const tenant_id = req.user.tenant_id
     const { name } = req.body;
     const companyData = { tenant_id, name };
     console.log(companyData)
